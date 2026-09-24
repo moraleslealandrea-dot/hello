@@ -1,0 +1,369 @@
+un nuevo cambio
+#YML
+---
+title: "Thinking in R"
+author: "Alvin Tan"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    toc: TRUE
+    toc_float: TRUE
+    theme: readable
+---
+''' CODE BLOCKS
+---
+
+_Many people have contributed to developing and revising the tutorial material over the years, including: Dan Birman, Mike Frank, Steph Gagnon, Cayce Hook, Anna Khazenzon, Andrew Lampinen, Verity Lua, Benoit Monin, Joshua Morris, Russ Poldrack, Jackie Schwartz, Yochai Shavit, Alvin Tan, Paul Thibodeau, Ewart Thomas, Natalia Velez, Michael Waskom, and Kara Weisman._
+
+---
+
+# Welcome to R
+
+R is a programming language with particular strengths in handling heterogeneous data and statistical processing. This tutorial aims to help you grasp the fundamentals of working with R, including: (1) understanding R and RStudio, (2) handling variables, and (3) using operators and functions.
+
+## Navigating RStudio 
+When you first encounter RStudio, there are three main panes:
+
+1. the console, where you can interact with R on the fly,
+2. the environment, which lists your variables and custom functions, and
+3. the utility pane, including help, files, plots, and other utilities.
+
+If you create a new file, you'll open up a fourth pane: the editor, which is where you'll see this document if you open the Rmd.
+
+## R files
+If you try to create a new file, you'll see that there are many types. 
+The most common types are the R script, which is the most basic, and the R Markdown, which allows you to combine R code with text.
+(Note: The newer Quarto Document also does the latter, with better Python integration, and if you've worked with Python before, Jupyter notebooks also support R!)
+Under the "File" menu, you will also see "New Project"---this creates an R Project, which is a really useful way to organize your projects by collecting all the relevant files in one place.
+
+## R Packages
+R is open source, and there are many pacakges with many many functions that you can use! Before we are able to use a package, we need to install them and load them. We only need to install them once, but you will need to load them every time you want to use the package in a new script. 
+
+```{r}
+install.packages("tidyverse") # you only need to run this once in R studio
+library("tidyverse") # load package
+```
+
+---
+
+# Variables, List & Dataframes
+## What are variables?
+You can interact with R using the console, but if you want to preserve some output (e.g., to use again in the future), you will need to assign the value to a _variable_. Assignment in R can be done with `<-`. (You can also use an equal sign but this is not preferred, because it doesn't makes the direction of assignment explicit). 
+
+Note that that variable names must start with a letter, and are case-sensitive. Typically, you also want to name your variables with meaningful names (e.g., `participant_id`, `condition`, `reaction_time` rather than `a1` or `var2`). This makes your code much more readable for people using your code---which includes yourself 6 months down the line when you need to understand what past you was doing!
+```{r}
+# interacting with console directly without assignment to variable
+6 + 9 
+
+# assign value to a variable
+cohort_size <- 6 + 9
+```
+
+This variable will now show up in your workspace---you can look at your Environment pane to see what your workspace contains. If you don't call it in your console/ script, there will be no output. You can call it in your script to see what it contains.
+```{r}
+cohort_size
+```
+
+You can then reuse this variable, but remember that if you want to preserve the output, you have to reassign it.
+```{r}
+# no reassignment
+cohort_size - 2
+cohort_size 
+```
+
+Since we did not re-assign it, the value stored in `cohort_size` did not change. Now, let's reassign it.
+```{r}
+# with reassignment: overwrites 'cohort_size' with new calculated value
+cohort_size <- cohort_size - 2 
+cohort_size
+
+# (re)assigned to new variable: creates new variable, 'cohort_size_new' with new value
+cohort_size_new <- cohort_size + 2 
+cohort_size_new
+```
+
+## What are vectors and lists?
+You can collect multiple pieces of data into a _vector_, which is an ordered group of elements with a single dimension. Vectors are constructed using the function `c()`, which stands for "concatenate":
+```{r}
+participant_ages <- c(26, 27, 24, 30, 23, 29)
+```
+
+Note that for a vector, all elements must have the same data type (numeric, character, or logical), or R will coerce them to the same type.
+```{r}
+weird_vector <- c(1, 2, TRUE, "a")
+class(weird_vector)
+```
+
+If you want to store elements of different data types, you can use a _list_, which is constructed using `list()`. You can  use the function `str()` to compactly view the list:
+```{r}
+weird_list <- list(1, 2, TRUE, "a")
+str(weird_list)
+```
+
+Because lists can store lots of different things, it is sometimes helpful to label the elements so you remember what each element is. 
+```{r}
+weird_list <- 
+  list(participant_id = 1, condition_id = 2, consent_signed = TRUE, code = "a")
+str(weird_list)
+```
+
+<div style="border: 1px solid black; padding: 10px; background-color: #f1fbfd;">
+**When would you ever create a variable/ vector/ list like this?:**
+You might use it to easily change a/ multiple value(s) that apply to several analyses that you run. For example, you may use bootstrapping for several of your analyses and you may want to keep the number of iterations constant. You could create a variable, `bootstrap_iterations`, and define it at the top of your script. In this way, if you ever change your mind about how many iterations you want to use, you won't need to manually change it for all your analyses.
+</div>
+
+## What are dataframes?
+Dataframes store two dimensions of data, and would be similar to an Excel spreadsheet or an SPSS data table (or a pandas dataframe in Python). They can simply be thought as a collection of vectors (columns) with the same number of elements (rows).
+
+Usually, we would have data to read into R. We can use base R's `read.csv()` function, or `haven::read_sav()` function for SPSS files. But for now, we'll create a datafile for our example:
+```{r}
+class_data <- 
+  data.frame(
+    area = c("Affective", "Cognitive", "Developmental", "Neuroscience", "Social"),
+    num_students = c(5, 2, 1, 3, 2),
+    is_the_best = c(TRUE, FALSE, FALSE, FALSE, FALSE),
+    stress_levels_pre = c(3, 4, 2, 3, 2),
+    stress_levels_post = c(3, 2, 4, 4, 4))
+
+# write.csv(class_data, "class_data.csv")
+
+# usually, we'd read in data instead of creating it in R like this. The command would be `class_data <- read.csv("class_data.csv")` or `class_data <- read_sav("dlass_data.sav")`.
+```
+
+If you want to look at the contents of a dataframe, you can click on it in your Environment pane, or use the function `View()`, or `Cmd+click`/ `Ctrl+click` on the dataframe name in your code. 
+```{r eval=F}
+# Not run
+View(class_data)
+```
+
+I also like using things like `glimpse()`, and `colnames()` to look at my data frame. `glimpse` tells you the variables in the dataframe and what class of variable they are, while `colnames` tells you the column names in the dataframe.
+
+```{r}
+glimpse(class_data)
+colnames(class_data)
+```
+
+# Indexing
+If you want to examine just one row/ column of a dataframe, you can use the `[]` operator to index. Given that dataframes are two-dimensional (with both rows and columns), we can specify two numbers [`row, column`] in the `[]` operator to identify which row(s) and column(s) we want.
+(**Note**: R is 1-indexing, which means the first element is element #1, rather than #0 as in Python and other programming languages.)
+```{r}
+class_data[5,1]
+```
+
+Here, we asked R to indicate what the 5th row, 1st column in our dataframe `class_data` is. We can also grab multiple rows/ columns using `:` for sequential indices, or `c()`. For example, if we want rows 2 to 4, and columns 1 and 3, we can do something like this:
+```{r}
+class_data[2:4, c(1,3)]
+```
+
+If you leave either the `row` or `column` argument blank, it extracts all the rows/ columns.
+```{r}
+class_data[, c(1,3)]
+```
+
+You can also specify which column you want to extract by typing the name of the column if is labelled. This may be helpful given that identifying data column by number is sometimes less intuitive. Note that the `$` operator does something similar.
+```{r}
+class_data[ ,"area"]
+class_data$area
+```
+
+You can even index elements that fulfill a certain condition in `[]`. For example, if i want to keep rows where number of studies are less than 3, I could do something like:
+```{r}
+class_data[class_data$num_students < 3, ]
+# note: you need to specify `class_data$`; also you can simply use dplyr::filter(), as shown later on
+```
+
+Of course, you can use indexing for lists and vectors too. Since they are one-dimensional, you only need to specify one number/ argument in the `[]`. Here are two examples:
+```{r}
+weird_vector[4]
+participant_ages[participant_ages < 27]
+```
+
+**APPLY YOUR KNOWLEDGE:**
+Index the subset of rows in `class_data` for which there are between 3 and 5 students.
+```{r}
+# Answer:
+
+```
+
+# Functions, the Tidyverse & Data Wrangling!
+Now that we have our data and can access our data like a pro, we might want to change our data in some way (e.g., recode a variable, calculate a sum score, etc). To do that, we can use _functions_!
+
+The tidyverse is an opinionated collection of R packages designed for data science, including `dplyr`, `tidyr`, and `ggplot2`. All these packages share an underlying design philosophy, grammar, and data structures. 
+
+Now we're going to talk a little bit about some of the tidyverse packages, how to use it to wrangle data to make it into a "tidy data"!
+
+## Pivoting for Tidy Data
+Tidy data is a format of data where:
+
+1. Each variable must have its own column. 
+2. Each observation must have its own row. 
+3. Each value must have its own cell.
+
+Currently, our dataset `class_data` has two observations of stress levels per row: `stress_levels_pre` and `stress_levels_post`. Therefore, it is not tidy. We can make our data tidy so we have an easier life later by using the function `pivot_longer()` from the `tidyr` package.
+
+```{r}
+class_data <- class_data %>% pivot_longer(
+    cols = stress_levels_pre:stress_levels_post, 
+    names_to = "stress_time", values_to = "stress_scores")
+class_data
+```
+
+As you'd notice, we used this pipe symbol: `%>%`. It basically tells R to put what is on the left of the pipe into the function on the right after the pipe. The pipe places the object on the left into the _first argument_ of the function on the right. One of the pros of using the tidyverse packages is that they usually have dataset as the very first argument. 
+
+If you want to convert a long dataframe into a wide dataframe, you can use `pivot_wider()` instead.
+```{r}
+class_data <- class_data %>% pivot_wider(
+    id_cols = area:is_the_best,
+    names_from = "stress_time", values_from = "stress_scores")
+class_data
+```
+
+## Keeping Only Relevant Data
+Sometimes, we have a bunch of data that's not relevant to our current analyses. 
+
+We have might have redundant variables (i.e., columns). For example, I'm only interested in the number of studnets in each area and their stress levels. To remove the other redundant variables, we can use `dplyr::select()` to select only the columns we want to KEEP. 
+```{r}
+class_data <- class_data %>% 
+  dplyr::select(area, num_students, stress_levels_pre, stress_levels_post)
+class_data
+```
+
+If you're only looking to remove a few specific columns, you can also use the `-` sign in conjunction with `dplyr::select()` to indicate what columns to REMOVE rather than KEEP. For example, if I want to remove the column `num_students`, I can do this:
+```{r}
+class_data <- class_data %>% 
+  dplyr::select(-num_students)
+class_data
+```
+
+Sometimes, we have might also have rows of data that cannot be used (e.g., people who fail attention checks). To remove these redundant rows, we can use `dplyr::filter()` to filter only the rows of data we want to keep. Let's filter our data to KEEP cases where the `stress_levels_pre` is greater than 2!
+```{r}
+class_data <- class_data %>% 
+  dplyr::filter(stress_levels_pre > 2)
+class_data
+```
+
+## Manipulating Data
+We often also need to manipulate our data to calculate things like mean scores or difference scores. Using the tidyverse, it's really simple to do so neatly! We use `dplyr::mutate()`! In `dplyr::mutate()`, we can perform arithmetic operations on variables to mutate them, and we can do them all in one mutate function!
+
+As a general format, you specify the new variable on the left, place an `=` to define the new variable, and state how you want the variable's value to be calculated/ determined on the right.
+
+For example, let's say we want to calculate both a difference score of stress and an average stress score for each area. We can do so like this:
+```{r}
+class_data <- class_data %>% 
+  dplyr::mutate(
+    diff_stress = stress_levels_post - stress_levels_pre,
+    avg_stress = (stress_levels_post + stress_levels_pre)/2)
+class_data
+```
+
+You can combine mutate with other functions as well. Some common ones include `dplyr::if_else()` and `dplyr::case_when()`. You might be able to guess w_hat they do based on their names. Both functions let you specify what output you want _if_ or _when_ a cerain condition is met. For example, if I want to create a variable that identifies if the stress levels decreased, I could do this:
+
+```{r}
+class_data <- class_data %>% 
+  dplyr::mutate(
+    improved = if_else(diff_stress < 0, "Yes", "No"))
+class_data[,-c(2,3,5)]
+```
+
+If I want to create a variable that describes how the stress level changed with more than two different descriptors, I could use `dplyr::case_when()` instead this:
+
+```{r}
+class_data <- class_data %>% 
+  dplyr::mutate(
+    desc_change = case_when(diff_stress == 0 ~ "No Change", 
+                            diff_stress < 0 ~ "Improved",
+                            diff_stress > 0 ~ "Worsened"))
+class_data[,-c(2,3,5)]
+```
+
+### Operators rundown
+You're probably familiar with operators, but for completeness' sake here are the relational, boolean, and arithmetic operators in R.
+
+| Category   | Operator | Description              |
+|------------|----------|--------------------------|
+| Relational | `<`      | Less than                |
+|            | `>`      | Greater than             |
+|            | `<=`     | Less than or equal to    |
+|            | `>=`     | Greater than or equal to |
+|            | `==`     | Equal to                 |
+|            | `!=`     | Not equal to             |
+| Boolean    | `&`      | And                      |
+|            | `\|`     | Or                       |
+|            | `!`      | Not                      |
+| Arithmetic | `+`      | Addition                 |
+|            | `-`      | Subtraction              |
+|            | `*`      | Multiplication           |
+|            | `/`      | Division                 |
+|            | `%%`     | Modulus (remainder)      |
+|            | `%/%`    | Integer division         |
+
+
+### Other Basic Functions
+As you know, we can use _functions_ to perform more complex operations. Functions specify a transformation from one or more inputs (called _arguments_ or _parameters_) to one or more outputs (or _return values_). You call a function by writing its name followed by parentheses, with any arguments going inside the parentheses.
+
+You can use functions straightforwardly to extract descriptive statistics. You can take the mean with---you guessed it---`mean()`, and standard deviation with `sd()`. You could also look at each vector’s `length()`, its `max()` or `min()` values, or its `median()` or `range()`.
+
+Most statistical functions in R, including `mean()`, have built-in missing-value handling. 
+Because missing data is common with real-world data, there is a special object in R to stand for it called `NA`. Functions like mean have an optional argument `na.rm` which tells the function whether it should just ignore these values. (`rm` stands for “remove”, just like in the terminal.) 
+
+Sometimes, `na.rm` is set to `FALSE` by default, so a vector with missing values will have a mean of `NA` (to indicate that the normal mathematical procedure failed on these particular data).
+
+```{r}
+paloalto_highs_na <- c(73, 81, NA, 84, 79, 75, 74)
+mean(paloalto_highs_na)
+mean(paloalto_highs_na, na.rm = TRUE)
+```
+
+Having a function throw an `NA` result may be helpful if you weren't expecting there to be an `NA` (e.g., it might signal that something earlier in your processing pipeline went wrong).
+But if you know that your data contains missing values, then remembering the existence of `na.rm` can help to save a lot of frustration when trying to debug your code.
+
+# Custom functions
+Note: This section is adapted from _R for Data Science_. 
+
+Sometimes, while writing code, you might find yourself copying and pasting the same code repeatedly, tweaking the variables in the process. It gets really annoying and tiring, and can be pretty prone to human error. That's where we can make custom functions to help us!
+
+For example, suppose I want to transform the 5-point stress variable in our `class_data` dataset by making the midpoint of the scale 0. In other words, I want a score of 1 on the scale to become -2, a score of 2 to become -2, a score of 3 to become 0, and etc. Imagine I had 10 measurements of stress instead of 2, manually changing all of them could make me more prone to making careless mistakes. I could instead write a function for that like this:
+
+```{r}
+rescale_stress <- function(stress) {
+  stress - 3
+}
+```
+
+(Note: If you are familiar with other programming languages, you may notice that there's no explicit return statement. R implicitly returns the last value obtained within the braces, but you can also make it explicit using `return()` with the return value inside the parentheses.)
+
+Now we can use this custom function on both (or my imaginary 10) stress variables:
+```{r}
+class_data <- class_data |> 
+  dplyr::mutate(
+    stress_levels_pre = rescale_stress(stress_levels_pre),
+    stress_levels_post = rescale_stress(stress_levels_post)
+  )
+class_data
+```
+
+Of course, this current function is extremely simple. But you could make the function more complex depending on your needs! One way I like to use it is for calculating Cronbach alphas. Often, datasets containing data from multi-item scales might label them with a common stem (e.g., `stress_1`, `stress_2`, etc.). I could create a function that helps me extract all variables with that same stem to calculate an alpha value. It might look something like this:
+
+```{r}
+data_items <- data.frame(
+  stress_1 = c(1,5,2,4,1,1,2),
+  stress_2 = c(1,3,2,2,1,2,2),
+  stress_3 = c(1,5,2,4,2,1,3),
+  stress_4 = c(3,2,2,3,2,1,2),
+  happy_1 = c(7,8,1,3,2,4,3),
+  happy_2 = c(4,9,3,3,2,6,3),
+  happy_3 = c(6,5,2,4,2,6,1),
+  happy_4 = c(4,5,1,3,2,3,2)
+)
+```
+
+```{r}
+calc_alpha <- function(data, stem) {
+  data |> 
+    dplyr::select(starts_with(paste(stem))) |> 
+    psych::alpha()
+}
+
+calc_alpha(data_items, "stress")
+calc_alpha(data_items, "happy")
+```
